@@ -34,8 +34,12 @@ class FIDdata:
                     self.G=line[1]#float(line[1])
                 if line[0]=="Gradient (G/cm):":
                     self.G=float(line[1])
+                if line[0]=="X-Gradient (G/cm):":
+                    self.G=float(line[1])
                 if line[0]=="Diffusion (cm^2/sec):":
                     self.D=float(line[1])
+                if line[0]=="f0 (Hz):":
+                    self.f0=float(line[1])
                 if line[0]=="Date  and Time:":
                     info=line[1].split("-")
                     self.Tstamp=datetime.datetime(int(info[0]), int(info[1]), int(info[2]), int(info[3]), int(info[4]), int(info[5]))
@@ -52,7 +56,6 @@ class FIDdata:
         self.name=fname.split("/")[-1]
         self.gamma=gamma=(2*np.pi)*(3240.) #Hz/G (radians)
         self.dX=np.power((4.*self.D)/(gamma*self.G),1./3.) #Boundary Thickness (cm)
-        self.BT2=np.power((3./8.-8./(9.*np.pi))*np.power(gamma*self.G,2)*self.D,-1./3.) #Boundary T2 (sec)
         print("File "+str(self.name)+" loaded")
 
 
@@ -73,16 +76,16 @@ class FIDdata:
 
 #Computes the DFT of the Raw Data contained in an FIDdata class
 class FIDFFTWindow:
-    def __init__(self,RawData,Times=False,PadTime=0,Phases=False,f0=0):
+    def __init__(self,RawData,Times=False,PadTime=0,Phases=False):
 
         self.SR=RawData.SR
 
         #If not given the start and end time of the DFT, then the DFT is performed on the entire set
         if Times==False:
             self.StartTime=float(0)/RawData.SR
-            self.EndTime=float(RawData.N-1)/RawData.SR
+            self.EndTime=float(RawData.N)/RawData.SR
             self.N0=RawData.N
-            self.TimeIndexes=TIndexes
+            self.TimeIndexes=[0,RawData.N] #index of time slice
         #If not given the time indexes to be used for the DFT, they are determined from start and end times.
         else:
             self.StartTime=Times[0]
@@ -112,45 +115,17 @@ class FIDFFTWindow:
             self.Phases=np.arcsin(np.imag(self.data)/self.Amps)*180/np.pi
             #np.angle(self.data,deg=True)
 
-        #Scaled Frequency
-        self.XFreqs=(self.Freqs-f0)*2.*np.pi/(RawData.G*RawData.gamma)
-        self.XFreqs=self.XFreqs/RawData.dX #normalize scale to boundary width
+        #Scaled Frequency, note this does not scale the amplitudes!
+        self.XFreqs=(self.Freqs-RawData.f0)*2.*np.pi/(RawData.G*RawData.gamma) #frequency in units of position with x=0 at f0
+        self.XFreqs=self.XFreqs/RawData.dX #frequency to unitless postion (in boundary thicknesses)
+
+        #to scale amps, use amps->amps*unitlessScale
+        self.unitlessScale=(RawData.G*RawData.gamma*RawData.dX)/2.*np.pi #unitless position/Hz
 
 
 
     def GetIndex(self,Freq):
         return int((Freq*float(self.N))/self.SR)
-
-    #Filters the frequncies with perfect step functions
-    def Filter(self,Range):
-        IndexL=self.GetIndex(Range[0])#int(((Range[0])*self.N)/self.SR)
-        IndexH=self.GetIndex(Range[1])#int(((Range[1])*self.N)/self.SR)
-
-        filter=np.zeros(self.N//2+1)
-        for i in range(IndexL,IndexH+1): filter[i]=1.0
-
-        self.data=self.data*filter
-        self.Amps=self.Amps*filter
-
-
-
-    def show(self,xlim=[15800,16000],err=False):
-
-        plt.figure()
-        Width=self.EndTime-self.StartTime
-
-        if err==False:
-            plt.plot(self.Freqs,self.Amps)
-        else:
-            plt.errorbar(self.Freqs,self.Amps,yerr=self.Aerr)
-
-        plt.title("FFT of Raw Signal between Red Bounds, frequency res: "+str(float(1./Width))+"Hz")
-        plt.xlim(xlim)
-        #plt.ylim([0,.2])
-        plt.xlabel("Frequency (Hz)")
-        plt.ylabel("Amplitude (V)")
-        plt.grid()
-        plt.show()
 
 
     #retrieves the frequencies of the DFT
@@ -162,25 +137,14 @@ class FIDFFTWindow:
             freqs.append(freq)
         return np.asarray(freqs)
 
-
-def GetChi2(Exp,Obs,Std,DoF):
-    sum=0
-    for i in range(len(Exp)):
-        term=((Exp[i]-Obs[i])/Std[i])**2
-        sum+=term
-
-    chi=sum/float(DoF)
-
-    pval=stats.chi2.sf(sum,DoF)
-
-    return chi,pval
-
-
-def GetFnames():
-    f=open("../FileNames.txt",'r')
+#returns all filenames in directory dir, which can be sorted according to the key "sorted" ( Ex: lambda fname:int(fname[0]) )
+def getFilenames(dir,sorted=False):
     fnames=[]
-    for line in f:
-        fnames.append(line[:-1])
-    f.close()
-    print("Getting Filenames from "+str(fnames[0].split("/")[-2]))
-    return fnames
+    for file in os.listdir(dir):
+        if file.endswith(".txt"):
+            #print(os.path.join(file))
+            fnames.append(dir+os.path.join(file))
+
+    if sorted!=False:
+        return sorted(fnames, key=sorted)
+    else: return fnames

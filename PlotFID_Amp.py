@@ -2,69 +2,32 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 from WalkerClasses import *
-from BoundaryDiffFunctions import *
-import time
 
 D=1.0
-G=1e-3 #Gauss/cm
+Gx=1e-3 ;Gy=Gx*1.5; Gz=Gx*0.5
 gamma=(2*np.pi)*(3240) #radian/Gauss
-BDx=np.power((4.*D)/(gamma*G),1./3.)
+BDx=np.power((4.*D)/(gamma*Gx),1./3.)
 L=1.0*BDx #Length of cell cm
 
-time,data=LoadData("N1e5G3D1L10.txt")
+time,data=LoadData("SimulationData/Lx=1Ly=1Lz=1SimAbs.txt")
+time2,data2=LoadData("SimulationData/Lx=2Ly=2Lz=2SimAbs.txt")
+time3,data3=LoadData("SimulationData/Lx=3Ly=3Lz=3SimAbs.txt")
+time4,data4=LoadData("SimulationData/Lx=4Ly=4Lz=4SimAbs.txt")
 
-time2,y=LoadData("L=10_f0=250absAn.txt")
+T2=(120.*D)/(((gamma*Gx)**2)*(L**4)) #Fast limit T2 time
+#y=np.exp(-1.25*time/T2)
 
-#y=np.exp(-time*np.power(gamma*G,2)*np.power(L,4)/(120.*D))
 
-plt.plot(time,data,label=r'$10^5$ Simulated Spins')
-plt.plot(time2,y,label="Kubo-Redfield Theory" )
-plt.title(str(r'$L=10$'))
+plt.plot(time,data,label=r'$L_x=L_y=L_z=1$')
+plt.plot(time2,data2,label=r'$L_x=L_y=L_z=2$')
+plt.plot(time3,data3,label=r'$L_x=L_y=L_z=3$')
+plt.plot(time4,data4,label=r'$L_x=L_y=L_z=4$')
+plt.title(str(r'3D Gradients Diagonal to a Cube'))
 plt.ylabel(r'$|\langle e^{i\theta}\rangle|$')
 plt.xlabel("Time (sec)")
+plt.xlim([0,0.8])
+#plt.xlim([0,1.2])
 plt.legend()
 
 
 plt.show()
-
-
-# path=""#"/Users/cameronerickson/Desktop/Academics/NPL/DRMRI/SignalSim/FakeSig/Signals/"
-# fname="L=x.txt"
-#
-# data=np.imag(data)
-#
-# f=open(path+fname,'w')
-#
-# f.write("Sample Rate:\t" + str(SR)+'\n')
-# f.write("Sample Size:\t" + str(SS)+'\n')
-# f.write("Read Time:\t" + str(float(SS)/SR)+'\n')
-# f.write("Diffusion (cm^2/sec):\t" + str(D)+'\n')
-# f.write("Gradient (G/cm):\t" + str(G)+'\n')
-# f.write("Data Start:\r\n")
-#
-# for d in data: f.write(str(d)+'\n')
-#
-# f.close()
-#
-# print("Created "+fname)
-
-
-# path=""#"/Users/cameronerickson/Desktop/Academics/NPL/DRMRI/SignalSim/FakeSig/Signals/"
-# fname="N5G1WallAnl.txt"
-#
-# y=np.imag(y)
-#
-# f=open(path+fname,'w')
-#
-# f.write("Sample Rate:\t" + str(SR)+'\n')
-# f.write("Sample Size:\t" + str(SS)+'\n')
-# f.write("Read Time:\t" + str(float(SS)/SR)+'\n')
-# f.write("Diffusion (cm^2/sec):\t" + str(D)+'\n')
-# f.write("Gradient (G/cm):\t" + str(G)+'\n')
-# f.write("Data Start:\r\n")
-#
-# for d in y: f.write(str(d)+'\n')
-#
-# f.close()
-#
-# print("Created "+fname)

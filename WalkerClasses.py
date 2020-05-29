@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import math
 import numpy as np #np.interp
 import time
@@ -10,82 +9,116 @@ BoltzmannK= 1.380649e-23 #in J/K
 RoomTemp=294.3 #Kelvin (70 degrees farenheit)
 
 
-
 #This class serves as the particle
 class Walker:
-    def __init__(self):
+    def __init__(self,dim):
 
-        self.x=0 #meters
-        self.t=0 #seconds
-        self.steps=0 #integer
-        self.theta=0
+        self.r=np.zeros(dim) #position vector: [x,y,z] in cm
+        self.steps=int(0) #integer number of steps the particle has taken
+        self.theta=0 #angular position (radians)
 
 
-#Contains all relevant information for a single walk
+#Contains all relevant information for a general single walk with no geometery specified
 class Walk:
-    #L=length of box
-    #D=diffusion constant
-    #dt=time step
-    def __init__(self,D,dt,L,Bfield,x0=0):
 
-        self.ptcl=Walker()
-        self.ptcl.x=x0
-        self.dt=dt #seconds
-        self.D=D #
-        self.L=L
-        self.Bfield=Bfield
-        self.gamma=(2*np.pi)*(3240) #Hz/G#
+    def __init__(self,paramsDict):
 
+        self.ptcl=Walker(len(paramsDict['r0'])) #number of spatial dimension
+        self.ptcl.r=np.asarray(paramsDict['r0'],dtype='float64') #starting position (cm)
+        self.dt=paramsDict['dt'] #simulation time step (sec)
+        self.D=paramsDict['D'] #diffusion constant (cm^2/sec)
+        self.gamma=(2*np.pi)*(3240) #gyromagentic ratio (Hz/Gauss)
 
-    #steps the particle
-    def step(self,type='const'):
+    #determines the next step in the random walk
+    def getStep(self):
+        sigma=np.sqrt(2.*self.D*self.dt)
+        return sigma*np.random.normal(loc=0,scale=1.0,size=len(self.ptcl.r))
 
 
-        l=self.GetStep(type)
+#Random walk with no boundaries
+class FreeWalk(Walk):
+    def __init__(self,paramsDict):
+        Walk.__init__(self,paramsDict)
+
+    #steps the particle and updates particle preccesion according to Bfield
+    def step(self,Bfield):
+
+        #aquires next step vector
+        l=self.getStep()
 
         #spin precesses at current position
-        self.ptcl.theta+=self.gamma*self.Bfield(self.ptcl.x)*self.dt
+        self.ptcl.theta+=self.gamma*Bfield(self.ptcl.r)*self.dt
 
-        self.ptcl.x+=l
-        self.ptcl.x=np.abs(self.ptcl.x) #This relfects about x=0
-        self.ptcl.x=self.L-np.abs(self.ptcl.x-self.L) #reflects about x=L
-        self.ptcl.t+=self.dt
-        self.ptcl.steps+=1
+        #update's partilce position and time
+        self.ptcl.r+=l
+        self.ptcl.steps+=int(1)
 
         return
 
-    #determines the mean free path of the step and time between steps
-    def GetStep(self,type="const"):
+#Random walk with infinite walls along x,y, and z axes
+class SemiFreeWalk(Walk):
+    def __init__(self,paramsDict):
+        Walk.__init__(self,paramsDict)
 
-        if type=="const":
-            dt=self.dt
-            D=self.D
-            l=np.sqrt(2.*D*dt)
+    #steps the particle and updates particle preccesion according to Bfield
+    def step(self,Bfield):
 
-            if random.random()<= 0.5:l=-l
+        #aquires next step vector
+        l=self.getStep()
 
-        if type=="Gauss":
-            dt=self.dt
-            D=self.D
-            sigma=np.sqrt(2.*D*dt)
+        #spin precesses at current position
+        self.ptcl.theta+=self.gamma*Bfield(self.ptcl.r)*self.dt
 
-            l=sigma*np.random.normal(loc=0,scale=1.0)
+        #update's partilce position and time
+        self.ptcl.r+=l
+
+        #reflects about x=0
+        self.ptcl.r=np.abs(self.ptcl.r)
+
+        self.ptcl.steps+=int(1)
+
+        return
+
+#Random walk in box with lengths specified by the tuple L
+class BoxWalk(Walk):
+    def __init__(self,paramsDict):
+        Walk.__init__(self,paramsDict)
+
+        self.L=paramsDict['L'] #tuple of lengths of the box, all in cm
+
+        if len(self.L)!=len(self.ptcl.r):
+            raise ValueError('Spatial dimension does not match box dimension!')
+
+        if np.min(self.L)<= 3.*np.sqrt(self.dt*2.*self.D):
+            raise ValueError('Step size within 3 sigma of box wall!')
 
 
-        return l
 
+    #steps the particle and updates particle preccesion according to Bfield
+    def step(self,Bfield):
 
-#Given a set of spatial coordinates x and corresponding temperatures T, TempMap(x_i) returns
-#the interpolated temperature at x_i. TempMap(x_i) is constant if x_i>x or x_i<x for all x.
-class BMap:
-    def __init__(self,x,B):
+        #aquires next step vector
+        l=self.getStep()
 
-        self.x=x
-        self.B=B
+        #spin precesses at current position
+        self.ptcl.theta+=self.gamma*Bfield(self.ptcl.r)*self.dt
 
-    def __call__(self, x):
-        return np.interp(x,self.x,self.B)
+        self.ptcl.r+=l
+        self.ptcl.steps+=int(1)
+        self.reflect()
 
+        return
+
+    #Reflects particle according specular reflection rule
+    def reflect(self):
+
+        for i in range(len(self.L)):
+            if self.ptcl.r[i]<self.L[i]:
+                self.ptcl.r[i]=np.abs(self.ptcl.r[i]) #relfects about x=0
+            if self.ptcl.r[i]>self.L[i]:
+                self.ptcl.r[i]=self.L[i]-np.abs(self.ptcl.r[i]-self.L[i]) #reflects about x=L
+
+        return
 
 
 
@@ -95,7 +128,7 @@ def binomialcull(Observed,Expected,Weights,N):
 
     CullObs=[]
     CullExp=[]
-    CullWgths=[]
+    CullWgths=[] #standard devaition
     for i in range(len(Observed)):
         delta0=Expected[i]/Weights[i]
         deltaN=(N-Expected[i])/Weights[i]
@@ -161,7 +194,7 @@ def GetProb(xi,xf,x0,L,D,t,N=1000):
 
 def SaveData(x,y,fname):
 
-    f=open("SavedData/"+fname,'w')
+    f=open(fname,'w')
 
     for i in range(len(x)):
         f.write(str(x[i])+'\t'+str(y[i])+'\n')
@@ -175,7 +208,7 @@ def LoadData(fname):
     x=[]
     y=[]
 
-    f=open("SavedData/"+fname,'r')
+    f=open(fname,'r')
 
     for line in f:
         line=line.split("\t")

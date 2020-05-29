@@ -1,26 +1,31 @@
 import matplotlib.pyplot as plt
 import math
 import numpy as np
+import sys
+sys.path.append('../')
 from WalkerClasses import *
 
 np.random.seed(5)
 random.seed(5)
 
-D=1#diffusion constant, cm^2/sec
-dt=0.1 #sec
+paramsDict={
+'D':1.0,
+'r0':[0.,0.],
+'dt': 1e-2
+}
+
 N=1000
 
 walkers=[]
 
-for i in range(N): walkers.append(Walk(1.0,1.0))
+for i in range(N): walkers.append(FreeWalk(paramsDict))
 for i in range(1000):
-    for W in walkers: W.step(type="Gauss")
+    for W in walkers: W.step(lambda x: 0)
 
 
 samples=[]
-for W in walkers: samples.append(W.ptcl.x)
-print("Sample Length")
-print(len(samples))
+for W in walkers: samples.append(W.ptcl.r[1])
+
 
 #Histogram the data
 hist,bin_edges=np.histogram(samples, bins=40)
@@ -28,8 +33,8 @@ hist,bin_edges=np.histogram(samples, bins=40)
 bin_centers=0.5*(bin_edges[1:]+bin_edges[:-1])
 
 #find expected sigma and mu
-total_time=walkers[1].ptcl.t
-sigma=np.sqrt(2.*D*total_time)
+total_time=walkers[1].ptcl.steps*walkers[1].dt
+sigma=np.sqrt(2.*walkers[1].D*total_time)
 mu=0
 print("Expected sigma: "+str(sigma))
 
@@ -38,12 +43,8 @@ stds=[]
 for i in range(1,len(bin_edges)):
 
     prob=stats.norm.cdf(bin_edges[i],loc=0,scale=sigma)-stats.norm.cdf(bin_edges[i-1],loc=0,scale=sigma)
-    #print("prob: "+str(prob))
     Es.append(prob*N)
-    #print("Expected: "+str(prob*N))
     stds.append(np.sqrt(prob*(1.-prob)*N))
-
-    #print("std's above zero: "+str(Es[-1]/np.sqrt(stds[-1])))
 
 x=np.linspace(-3*sigma,3*sigma,1000)
 widths=(bin_centers[1]-bin_centers[0])*1
