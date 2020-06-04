@@ -355,9 +355,10 @@ def IntegrateSigsNW(times,G,D,f0,pdf_x,pdf_y):
 
     return sig
 
-#Returns surface number density (in layers) as long as N>>A*n_s
-#n_s is in units of cm^-2 and T is in kevlin
-def Getn_s(n_b,T,N=10):
+#Returns surface number density n_s (in layers) as long as N>>A*n_s
+#WARNING: this has no checks for the above condition
+#n_b is the bulk number density in units of cm^-2 and T is in kevlin
+def Getn_s_(n_b,T,N=10):
 
     s=0.5 #spin of system
     e_b=2.28 #Surface binding energy in Kelvin
@@ -385,10 +386,10 @@ def Getn_s(n_b,T,N=10):
     return (n_s*1e-4)/nl #converts to cm^-2 then to layers
 
 
-#This function is essentially the same as Getn_s, but with different inputs
+#This function is essentially the same as Getn_s, but with different inputs and added checks
 #N3= total number of atoms, S=surface area (cm^2), V=volume (cm^3)
-#n=number of iterations
-def Getn_s2(N3,S,V,T,n):
+#n=number of iterations for fixed point method
+def Getn_s(N3,S,V,T):
 
     s=0.5 #spin of system
     e_b=2.28 #Surface binding energy in Kelvin
@@ -397,25 +398,19 @@ def Getn_s2(N3,S,V,T,n):
     #n_b=n_b*1e6 #converts to m^-2
 
     #Gets n_s for the case when N_s<<N_b
-    n_s=Getn_s(N3/V,T,10)
+    n_s=Getn_s_(N3/V,T,10)
 
     #Worst case
     Sfrac=np.max(n_s*nl*S/N3)
-    print("Maximum fraction on surface (this should be much smaller than 1): "+str(Sfrac))
+    print("Maximum fraction on surface (this should be much smaller than 1): "+"{0:.2g}".format(Sfrac))
 
     if Sfrac>0.1: print("Warning! n_s may not be valid")
-
-    # print(n_s[0])
-    # # #Case when N_s~N_b
-    # for i in range(n):
-    #     n_s=Getn_s((N3/V)-(S/V)*n_s*nl,T,10)
-    #     print(n_s[0])
 
     return n_s #in  layers
 
 
 
-#Gets fraction of 3He on surface assuming 2D high temp limit
+#Gets fraction of 3He on surface assuming 2D high temp limit (Nondegenerate,Noninteracting)
 #S in cm, V in cm, T in kelvin
 def GetSfrac(S,V,T):
 
