@@ -8,11 +8,9 @@ sys.path.append('../')
 from KuboRedfieldFunctions import *
 
 '''
-This code plots the surface
-
-See the plots fom this code at
+This code plots the surface occupation
+See the plots fom this code and further explaination at
 https://www.evernote.com/l/AuEmmLn7gv1CIZv05EO63PCszdrEk36WoQQ
-
 '''
 
 
