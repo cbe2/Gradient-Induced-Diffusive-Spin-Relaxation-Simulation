@@ -55,7 +55,7 @@ class FIDdata:
         self.N=len(V)
         self.name=fname.split("/")[-1]
         self.gamma=gamma=(2*np.pi)*(3240.) #Hz/G (radians)
-        self.dX=np.power((4.*self.D)/(gamma*self.G),1./3.) #Boundary Thickness (cm)
+        #self.dX=np.power((4.*self.D)/(gamma*self.G),1./3.) #Boundary Thickness (cm)
         print("File "+str(self.name)+" loaded")
 
 
@@ -116,11 +116,11 @@ class FIDFFTWindow:
             #np.angle(self.data,deg=True)
 
         #Scaled Frequency, note this does not scale the amplitudes!
-        self.XFreqs=(self.Freqs-RawData.f0)*2.*np.pi/(RawData.G*RawData.gamma) #frequency in units of position with x=0 at f0
-        self.XFreqs=self.XFreqs/RawData.dX #frequency to unitless postion (in boundary thicknesses)
+        #self.XFreqs=(self.Freqs-RawData.f0)*2.*np.pi/(RawData.G*RawData.gamma) #frequency in units of position with x=0 at f0
+        #self.XFreqs=self.XFreqs/RawData.dX #frequency to unitless postion (in boundary thicknesses)
 
         #to scale amps, use amps->amps*unitlessScale
-        self.unitlessScale=(RawData.G*RawData.gamma*RawData.dX)/2.*np.pi #unitless position/Hz
+        #self.unitlessScale=(RawData.G*RawData.gamma*RawData.dX)/2.*np.pi #unitless position/Hz
 
 
 

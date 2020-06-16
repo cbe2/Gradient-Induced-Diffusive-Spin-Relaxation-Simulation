@@ -10,7 +10,7 @@ start_time = time.time()
 #np.random.seed(1)
 #random.seed(1)
 
-N=int(1e5) #number of walkers
+N=int(1e3) #number of walkers
 steps=1000
 print("{0:.1g}".format(N)+" spins simulating")
 
@@ -82,27 +82,27 @@ print("{0:.2g}".format(TimeTaken/float(steps*N)) + " min per step*particle")
 plt.show()
 
 #---------Writes data to file---------------
-SaveData(times,np.abs(data),"SimulationData/Lx=2Ly=2SimAbs.txt")
-
-path="SimulationData/"
-fname="Lx=2Ly=2.txt"
-
-data=np.imag(data)
-
-f=open(path+fname,'w')
-
-f.write("Spins Simulated:\t"+str(int(N))+'\n')
-f.write("Sample Rate:\t" + str(1./paramsDict['dt'])+'\n')
-f.write("Sample Size:\t" + str(steps)+'\n')
-f.write("Read Time:\t" + str(float(steps)*paramsDict['dt'])+'\n')
-f.write("Diffusion (cm^2/sec):\t" + str(paramsDict['D'])+'\n')
-f.write("X-Gradient (G/cm):\t" + str(Gx)+'\n')
-f.write("Y-Gradient (G/cm):\t" + str(Gy)+'\n')
-f.write("Z-Gradient (G/cm):\t" + str(Gz)+'\n')
-f.write("f0 (Hz):\t"+str(f0)+'\n')
-f.write("Data Start:\r\n")
-
-for d in data: f.write(str(d)+'\n')
-
-f.close()
-print("Created "+fname)
+# SaveData(times,np.abs(data),"SimulationData/TimeTestAbs.txt")
+#
+# path="SimulationData/"
+# fname="TimeTest.txt"
+#
+# data=np.imag(data)
+#
+# f=open(path+fname,'w')
+#
+# f.write("Spins Simulated:\t"+str(int(N))+'\n')
+# f.write("Sample Rate:\t" + str(1./paramsDict['dt'])+'\n')
+# f.write("Sample Size:\t" + str(steps)+'\n')
+# f.write("Read Time:\t" + str(float(steps)*paramsDict['dt'])+'\n')
+# f.write("Diffusion (cm^2/sec):\t" + str(paramsDict['D'])+'\n')
+# f.write("X-Gradient (G/cm):\t" + str(Gx)+'\n')
+# f.write("Y-Gradient (G/cm):\t" + str(Gy)+'\n')
+# f.write("Z-Gradient (G/cm):\t" + str(Gz)+'\n')
+# f.write("f0 (Hz):\t"+str(f0)+'\n')
+# f.write("Data Start:\r\n")
+#
+# for d in data: f.write(str(d)+'\n')
+#
+# f.close()
+# print("Created "+fname)
