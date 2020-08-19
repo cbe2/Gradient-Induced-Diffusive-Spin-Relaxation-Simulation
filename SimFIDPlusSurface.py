@@ -6,39 +6,44 @@ from HePhysicalProperties import *
 import time
 start_time = time.time()
 
+'''
+For simulating surface + bulk signals both as random walks.
+This code simulates both seperately and adds them all in one place.
+'''
+
 #All units cm,sec,Gauss
 
 #np.random.seed(1)
 #random.seed(1)
 
-Ns=int(5e3) #number of surface walkers
-Nb=int(5e3) #number of bulk walkers
+Ns=int(5e6) #number of surface walkers
+Nb=int(5e6) #number of bulk walkers
 N=Ns+Nb
-steps=3300
+steps=2500
 print("\n{0:.1g}".format(N)+" spins simulating")
 
-T=0.4 #Kelvin
+T=0.2 #Kelvin
 x3=1e-4 #3He concentration
 
-Gx=1e-3 ;Gy=0; Gz=1e-3;gamma=(2*np.pi)*(3240) #Bfield params
-D_b=1.#Db(x3,T) #bulk diffusion constant
-D_s=1.#1e-2 #surface diffusion constant
+Gx=4e-4 ;Gy=0; Gz=-1;gamma=(2*np.pi)*(3240) #Bfield params
+D_b=Db(x3,T) #bulk diffusion constant
+D_s=1e-2#1e-2#1e-2 #surface diffusion constant
 print("Bulk Diffusion Const "+"{0:.3g}".format(D_b))
 print("Surface Diffusion Const "+"{0:.3g}".format(D_s))
 print("------------------------------------")
 
-SBDx=np.power((4.*D_s)/(gamma*Gx),1./3.)
-BDy=-1#np.power((4.*D)/(gamma*Gy),1./3.)
-BBDz=np.power((4.*D_b)/(gamma*Gz),1./3.)
+SBDx=np.power((4.*D_s)/(gamma*np.abs(Gx)),1./3.)
+#SBDy=np.power((4.*D_s)/(gamma*np.abs(Gy)),1./3.)
+BBDz=np.power((4.*D_b)/(gamma*np.abs(Gz)),1./3.)
 print("X Surface Boundary Thickness: "+"{0:.3g}".format(SBDx))
-print("Y Surface Boundary Thickness: "+"{0:.3g}".format(BDy))
+#print("Y Surface Boundary Thickness: "+"{0:.3g}".format(SBDy))
 print("Z Bulk Boundary Thickness: "+"{0:.3g}".format(BBDz))
 print("------------------------------------")
 
 #Box dimensions (cm)
-Lx=1.*SBDx
-Ly=1.#1.*BDy
-Lz=1.*BBDz
+Lx=4.#1.*SBDx
+Ly=4.#1.*SBDy
+Lz=4.#1.*BBDz
 
 print("Lx: "+"{0:.3g}".format(Lx))
 print("Ly: "+"{0:.3g}".format(Ly))
@@ -58,7 +63,7 @@ print("Surface Layers: "+"{0:.3g}".format(n_s))
 nl=6.4e14 #one layer surface number density (cm^-2)
 print("Surface Atoms: "+"{0:.3g}".format(nl*n_s*S))
 
-Sfrac = 1#(n_s*nl)*S/N3 #Fraction on the surface N_s/(N_s+N_b)
+Sfrac = (n_s*nl)*S/N3 #Fraction on the surface N_s/(N_s+N_b)
 print("Surface Fraction: "+"{0:.3g}".format(Sfrac))
 print("------------------------------------")
 
@@ -119,7 +124,7 @@ for i in range(steps):
     #scale the surface signal to the right proportion,
     #keeps total normalization to 1
     thetaSumS=thetaSumS*Sfrac/Ns
-    thetaSumB=thetaSumB/Nb#*(1.-Sfrac)/Nb
+    thetaSumB=thetaSumB*(1.-Sfrac)/Nb
 
     data.append(thetaSumS+thetaSumB)
     times.append(i*walkers[0].dt)
@@ -142,15 +147,16 @@ print("{0:.2g}".format(TimeTaken/float(steps*N)) + " min per step*particle")
 plt.show()
 
 #---------Writes data to file---------------
-SaveData(times,np.abs(data),"SimulationData/SurfaceTestSf=1e-1Abs.txt")
+SaveData(times,np.abs(data),"SimulationData/SimSf=5e-1Abs.txt")
 
 path="SimulationData/"
-fname="Sf=1.txt"
+fname="SimSf=5e-1.txt"
 
 data=np.imag(data)
 
 f=open(path+fname,'w')
 
+f.write("Notes:\t Walkers distributed from 100cm to 110cm and gradient (|G|=1e-3) points in the y-direction"+'\n')
 f.write("Spins Simulated:\t"+str(int(N))+'\n')
 f.write("Sample Rate:\t" + str(1./paramsDictB['dt'])+'\n')
 f.write("Sample Size:\t" + str(steps)+'\n')

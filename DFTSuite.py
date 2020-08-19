@@ -24,6 +24,8 @@ class FIDdata:
         for line in f:
             if header==False:
                 line=line.split("\t")
+                if line[0]=="Legend Name:":
+                    self.LN=line[1][:-1]
                 if line[0]=="Sample Rate:":
                     self.SR=float(line[1])
                 if line[0]=="Sample Size:":
@@ -47,11 +49,12 @@ class FIDdata:
                     header=True
             else:
                 line=line.split("\n")
-                V.append(float(line[0]))
+                V.append(complex(line[0]))
         f.close()
         V=np.asarray(V)
-        V=V.astype(np.float)
-        self.data=V
+        #V=V.astype(np.float)
+        self.norms=np.abs(V)
+        self.data=np.real(V)
         self.N=len(V)
         self.name=fname.split("/")[-1]
         self.gamma=gamma=(2*np.pi)*(3240.) #Hz/G (radians)
@@ -69,7 +72,7 @@ class FIDdata:
         ax1 = fig1.add_subplot(111)
         ax1.set(title="Raw Signal", xlabel="Time (sec)", ylabel="Voltage (V)")
         time=np.linspace(0,self.N/self.SR,self.N)
-        ax1.plot(time,self.data)
+        ax1.plot(time,self.norms)
         ax1.grid()
         plt.show()
 
@@ -101,12 +104,12 @@ class FIDFFTWindow:
         else:self.N=self.N0
 
         zeros=self.N-self.N0
-        zerosBefore=zeros//2
+        zerosBefore=0#zeros//2
         zerosAfter=zeros-zerosBefore
 
 
         #Performs the DFT along with mean value zero padding
-        self.data=np.fft.rfft(np.lib.pad(RawData.data[self.TimeIndexes[0]:self.TimeIndexes[1]], (zerosBefore,zerosAfter), 'mean'))
+        self.data=np.fft.rfft(np.lib.pad(RawData.data[self.TimeIndexes[0]:self.TimeIndexes[1]], (zerosBefore,zerosAfter), 'constant', constant_values=(0, 0)))
         #rescales the DFT data to account for padding
         self.Amps=2.0*np.abs(self.data)/self.N0
         self.Freqs=self.GetFreqs(self.N,RawData.SR)

@@ -8,6 +8,9 @@ He3Mass=5.008234e-27  #in Kg
 BoltzmannK= 1.380649e-23 #in J/K
 RoomTemp=294.3 #Kelvin (70 degrees farenheit)
 
+"""
+Contains all the classes used for the random walk simulation
+"""
 
 #This class serves as the particle
 class Walker:
@@ -216,3 +219,9 @@ def LoadData(fname):
         y.append(float(line[1]))
 
     return np.asarray(x),np.asarray(y)
+
+#returns the boundary thickness
+def bThickness(D,G,gamma):
+
+    if G==0: return np.inf
+    else: return np.power((4.*D)/(gamma*np.abs(G)),1./3.)

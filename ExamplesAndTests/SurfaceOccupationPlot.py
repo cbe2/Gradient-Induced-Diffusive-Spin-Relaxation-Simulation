@@ -36,15 +36,26 @@ n_sFrac=Sfrac*n_3*V/A #in cm^-2
 n_sFrac=n_sFrac/nl # #in layers
 
 #This tests the significance of different effects
-plt.loglog(n_3/n4,n_sFrac,label="Non Degenerate, Non Interacting")
-plt.loglog(n_3/n4,Getn_s_(n_3,T,0),label="Degenerate, Non Interacting")
-plt.loglog(n_3/n4,Getn_s(N_3,A,V,T),label="Degenerate, Interacting")
+#plt.loglog(n_3/n4,n_sFrac,label="Non Degenerate, Non Interacting")
+#plt.loglog(n_3/n4,Getn_s_(n_3,T,0),label="Degenerate, Non Interacting")
+
+# La=2.# cm
+# Lb=5. #cm
+# T=.4
+# N_3=n_3*V*La*Lb*La
+# plt.loglog(n_3/n4,Getn_s(N_3,La*La,La*La*Lb,0.4)*nl/n_3,label="T=400mK")
+# plt.loglog(n_3/n4,Getn_s(N_3,La*La,La*La*Lb,0.3)*nl/n_3,label="T=300mK")
+# plt.loglog(n_3/n4,Getn_s(N_3,La*La,La*La*Lb,0.2)*nl/n_3,label="T=200mK")
+# plt.loglog(n_3/n4,Getn_s(N_3,La*La,La*La*Lb,0.1)*nl/n_3,label="T=100mK")
+# plt.title(r'$n_s/n_b$')
+# plt.ylabel("cm")
+# plt.xlabel(r"$x_3$")
 
 
 plt.legend()
-plt.ylabel("Surface Number Density (in Layers)")
-plt.xlabel("Bulk 3He concentration")
-plt.title("1 cc cube of liquid at 100mK")
+# plt.ylabel("Surface Number Density (in Layers)")
+# plt.xlabel("Bulk 3He concentration")
+# plt.title("1 cc cube of liquid at 100mK")
 plt.grid()
 
 plt.show()
