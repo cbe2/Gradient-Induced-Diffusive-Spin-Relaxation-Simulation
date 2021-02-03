@@ -225,3 +225,23 @@ def bThickness(D,G,gamma):
 
     if G==0: return np.inf
     else: return np.power((4.*D)/(gamma*np.abs(G)),1./3.)
+
+
+#returns the resonance thickness (B1 in Gauss, G in Gauss/cm, theta in radians)
+def rThickness(B1,G,theta):
+
+    if G==0 or theta==0: return np.inf
+    else: return B1/(G*theta)
+
+#returns the diffusion time (G in Gauss/cm, D in cm^2/sec, gamma in Hz/G)
+def Dtime(G,gamma,D):
+
+    if G==0 or D==0: return np.inf
+    else: return np.power(3./(D*(gamma*G)**2),1./3.)
+
+
+#returns the spatial dephasing time (G in Gauss/cm, D in cm^2/sec, gamma in Hz/G)
+def Stime(G,gamma,L):
+
+    if G==0 or L==0: return np.inf
+    else: return 2.*np.pi/(gamma*G*L)

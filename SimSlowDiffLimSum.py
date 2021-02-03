@@ -79,6 +79,7 @@ B0=2.*np.pi*f0/gamma #holding field vaule to match f0
 Bs=B0+Gx*Lx/2.+Gy*Ly/2. #effective surface field (at z=0)
 Bb=B0+Gx*Lx/2.+Gy*Ly/2.-Gz*Lz/2. #effective bulk field, - sign because z is negative in bulk
 
+#Surface signal
 surfaceSig= np.exp(1j*gamma*Bs*times)*np.sinc(rT2_x*times/np.pi)*np.sinc(rT2_y*times/np.pi)
 bulkSig=np.exp(1j*gamma*Bb*times)*np.sinc(rT2_x*times/np.pi)*np.sinc(rT2_y*times/np.pi)*np.sinc(rT2_z*times/np.pi)
 

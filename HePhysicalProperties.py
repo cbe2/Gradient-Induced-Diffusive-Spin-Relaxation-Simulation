@@ -57,7 +57,7 @@ def Getn_s_(n_b,T,N=10):
     return (n_s*1e-4)/nl #converts to cm^-2 then to layers
 
 
-#This function is essentially the same as Getn_s, but with different inputs and added checks
+#This function is essentially the same as Getn_s_, but with different inputs and added checks
 #N3= total number of atoms, S=surface area (cm^2), V=volume (cm^3)
 #n=number of iterations for fixed point method
 def Getn_s(N3,S,V,T):

@@ -22,13 +22,14 @@ for f in fnames:
 pad=0 #seconds of padding on data set
 sDFTs=[]
 for S in signals:
-    sDFTs.append(FIDFFTWindow(S,PadTime=pad))
-    #sDFTs.append(FIDFFTWindow(S,Times=[0,1],PadTime=pad))
+    #sDFTs.append(FIDFFTWindow(S,PadTime=pad))
+    sDFTs.append(FIDFFTWindow(S,Times=[.005,1],PadTime=pad))
 
 #plots DFTs
 for i in range(len(sDFTs)):
     #plt.plot(sDFTs[i].Freqs-250,-2.*np.imag(sDFTs[i].data)/sDFTs[i].N0)#,label=signals[i].name[:-4],linestyle='-')
-    plt.plot(sDFTs[i].Freqs-signals[i].f0,2.*np.real(sDFTs[i].data)/sDFTs[i].N0,label=signals[i].LN)#,label=signals[i].name[:-4],linestyle='-')
+    plt.plot(sDFTs[i].Freqs,2.*np.real(sDFTs[i].data)/sDFTs[i].N0,label=signals[i].LN)#,label=signals[i].name[:-4],linestyle='-')
+    #plt.plot(sDFTs[i].Freqs,2.*np.imag(sDFTs[i].data)/sDFTs[i].N0,label=signals[i].LN)
     #plt.plot(sDFTs[i].Freqs,sDFTs[i].Amps,label=signals[i].name[:-4],linestyle='-')
     #plt.plot(sDFTs[i].Freqs-250,sDFTs[i].Phases)#,label=signals[i].name[:-4],linestyle='-')
 
@@ -38,8 +39,8 @@ for i in range(len(sDFTs)):
 #plt.ylim([0,1])
 plt.grid()
 plt.legend()#
-plt.title(r' Bulk Signal D=2.7 cm$^2$/sec Vs D=0 cm$^2$/sec, L=4cm, G=1 G/cm')
-plt.xlabel('Frequency (Hz) (offset is arbitrary)')
+plt.title(r'DFT, 5 msec delay')
+plt.xlabel('Frequency (Hz)')
 plt.ylabel('Real Part of the DFT (arbitrary units)')
 #plt.ylabel('Imaginary part of DFT')
 plt.show()

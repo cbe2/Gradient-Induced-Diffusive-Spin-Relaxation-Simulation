@@ -9,8 +9,8 @@ import datetime
 from scipy.optimize import curve_fit
 from scipy.special import ellipe
 from scipy import stats
-import uncertainties as unc
-import uncertainties.umath as umath
+#import uncertainties as unc
+#import uncertainties.umath as umath
 
 #FIDdata EDITED for Fake Signals
 
@@ -45,7 +45,7 @@ class FIDdata:
                 if line[0]=="Date  and Time:":
                     info=line[1].split("-")
                     self.Tstamp=datetime.datetime(int(info[0]), int(info[1]), int(info[2]), int(info[3]), int(info[4]), int(info[5]))
-                if line[0]=="Data Start:\r\n":
+                if line[0]=="Data Start:\n":
                     header=True
             else:
                 line=line.split("\n")
