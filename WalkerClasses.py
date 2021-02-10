@@ -83,7 +83,7 @@ class SemiFreeWalk(Walk):
         return
 
 #Random walk in box of arbitary dimension and lengths specified by the tuple L
-#Box is assumed to have 1 corner at the orgin and have all coordinates positive
+#Box is assumed to be centered on the origin.
 class BoxWalk(Walk):
     def __init__(self,paramsDict):
         Walk.__init__(self,paramsDict)
@@ -96,6 +96,9 @@ class BoxWalk(Walk):
         if np.min(self.L)<= 3.*np.sqrt(self.dt*2.*self.D):
             raise ValueError('Step size within 3 sigma of box wall!')
 
+        for i in range(len(self.L)):
+            if np.abs(self.ptcl.r[i])> self.L[i]/2.:
+                raise ValueError('particle not starting in box!')
 
 
     #steps the particle and updates particle preccesion according to Bfield
@@ -117,11 +120,10 @@ class BoxWalk(Walk):
     def reflect(self):
 
         for i in range(len(self.L)):
-            if self.ptcl.r[i]<self.L[i]:
-                self.ptcl.r[i]=np.abs(self.ptcl.r[i]) #relfects about origin
-            if self.ptcl.r[i]>self.L[i]:
-                self.ptcl.r[i]=self.L[i]-np.abs(self.ptcl.r[i]-self.L[i]) #reflects about x=L
-
+            if self.ptcl.r[i]> 0.5*self.L[i]:
+                self.ptcl.r[i]=self.L[i]-self.ptcl.r[i]
+            if self.ptcl.r[i]< -0.5*self.L[i]:
+                self.ptcl.r[i]=-self.L[i]-self.ptcl.r[i]
         return
 
 #3D Random walk in a rectangular cell with feed through at the top along the z-axis
@@ -145,7 +147,10 @@ class CellWalk(Walk):
         if np.min(self.SL)<= 3.*np.sqrt(self.dt*2.*self.D):
             raise ValueError('Step size within 3 sigma of stem wall!')
 
-        print("mfp = "+str(np.sqrt(self.dt*2.*self.D)))
+        for i in range(len(self.L)):
+            if np.abs(self.ptcl.r[i])> self.L[i]/2. and (not self.inStem(self.ptcl.r)):
+                raise ValueError('particle not starting in cell!')
+
 
     #steps the particle and updates particle preccesion according to Bfield
     def step(self,Bfield):
@@ -164,7 +169,7 @@ class CellWalk(Walk):
 
         return
 
-    #checks to see if walker is in stem
+    #checks to see if walker is in stem, r is 3D vector
     def inStem(self,r):
         if np.abs(r[0])<0.5*self.SL[0] and np.abs(r[1])<0.5*self.SL[1]: return True
         else: return False
@@ -257,7 +262,8 @@ def getPvalue(Observed,Expected,Weights,dof):
 
     return chi2,pval
 
-#returns p(x|x0) for 1D box
+
+#returns p(x|x0) for 1D box from x=0 to x=L
 def GetDist(x,x0,L,D,t,N=100):
     sum=0
 
@@ -273,7 +279,7 @@ def GetDist(x,x0,L,D,t,N=100):
     return sum
 
 
-#returns probability of x in [xi,xf] for 1D box starting at x0
+#returns probability of x in [xi,xf] for 1D box (x=0 to x=L) starting at x0
 def GetProb(xi,xf,x0,L,D,t,N=1000):
     sum=0
 

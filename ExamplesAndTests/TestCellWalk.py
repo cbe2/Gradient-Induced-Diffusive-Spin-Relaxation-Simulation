@@ -10,7 +10,7 @@ np.random.seed(2)
 #random.seed(5)
 
 paramsDict={
-'D':1.0,
+'D':1,
 'r0':[0,0,0.6],
 'dt': 1e-4,
 'L': [1.,1.,1.0],

@@ -5,18 +5,18 @@ import sys
 sys.path.append('../')
 from WalkerClasses import *
 
-#np.random.seed(5)
-#random.seed(5)
+np.random.seed(5)
+random.seed(5)
 
 paramsDict={
 'D':1.0,
-'r0':[0.4,0.2,0.4],
+'r0':[0.4,0.2,0.1],
 'dt': 0.5e-4,
 'L': [1.,1.,.5]
 }
 
 N=1000
-steps=1000
+steps=100
 
 walkers=[]
 
@@ -46,15 +46,15 @@ for i in range(1,len(bin_edges)):
 
     xf=bin_edges[i]; xi=bin_edges[i-1]
     x0=paramsDict['r0'][2] ; L=paramsDict['L'][2] ; D=paramsDict['D']
-    prob=GetProb(xi,xf,x0,L,D,total_time,N=1000)#(xf-xi)/L
+    prob=GetProb(xi+L/2.,xf+L/2.,x0+L/2.,L,D,total_time,N=1000)# +L/2 due to coordinate shift
     Es.append(prob*N)
     stds.append(np.sqrt(prob*(1.-prob)*N))
 
 
 
-x=np.linspace(0,L,100)
+x=np.linspace(-L/2.,L/2.,100)
 widths=(bin_centers[1]-bin_centers[0])*1
-y=GetDist(x,x0,L,D,total_time,N=100)*N*widths
+y=GetDist(x+L/2.,x0+L/2.,L,D,total_time,N=100)*N*widths
 #y=(np.zeros(len(x))+1./L)*N*widths
 plt.bar(bin_centers,hist,label="Simulation Data",ls='-',color='blue',fill=False,ec="blue",width=widths)
 plt.bar(bin_centers,Es,yerr=stds,label="Expected",ls='-',color='green',fill=False,ec='green',width=widths)
