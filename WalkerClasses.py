@@ -100,6 +100,8 @@ class BoxWalk(Walk):
             if np.abs(self.ptcl.r[i])> self.L[i]/2.:
                 raise ValueError('particle not starting in box!')
 
+    def __str__(self):
+        return "Rectangular Box Walk"
 
     #steps the particle and updates particle preccesion according to Bfield
     def step(self,Bfield):
@@ -126,6 +128,95 @@ class BoxWalk(Walk):
                 self.ptcl.r[i]=-self.L[i]-self.ptcl.r[i]
         return
 
+#Random walk in cylinder. If tuple L is 1D, the walk is 2D in a circle, if tuple 2D, the walk is in a cylinder
+#z-axis is cylinder axis.
+#assumed circle center is at orign.
+class CylinderWalk(Walk):
+    def __init__(self,paramsDict):
+        Walk.__init__(self,paramsDict)
+
+        self.L=paramsDict['L'] # first element is the diameter, second is the length (cm)
+        self.R=self.L[0]/2.
+
+        if len(self.L)>2:
+            raise ValueError('Too many cylinder dimensions given!')
+
+
+        if len(self.L)+1!=(len(self.ptcl.r)):
+            raise ValueError('Spatial dimension does not match cylinder dimension!')
+
+        #checks to make sure particle step size not too big
+        if np.min(self.L)<= 3.*np.sqrt(self.dt*2.*self.D):
+            raise ValueError('Step size within 3 sigma of cell wall!')
+
+        #checks to make sure particle starts in box.
+        for i in range(len(self.L)):
+            if i==0:
+                if np.sqrt(self.ptcl.r[0]**2+self.ptcl.r[1]**2)>self.R:
+                    raise ValueError('particle not starting in box!')
+            elif i==1:
+                if np.abs(self.ptcl.r[2])> self.L[i]/2.:
+                    raise ValueError('particle not starting in box!')
+
+
+    def __str__(self):
+        if len(self.L)==1:
+            return "Circle Walk"
+        if len(self.L)==2:
+            return "Cylinder Walk"
+
+    #steps the particle and updates particle preccesion according to Bfield
+    def step(self,Bfield):
+
+        #aquires next step vector
+        l=self.getStep()
+
+        #spin precesses at current position
+        self.ptcl.theta+=self.gamma*Bfield(self.ptcl.r)*self.dt
+
+        r1=self.ptcl.r.copy() #important to copy because of mutable aliasing
+        self.ptcl.r+=l
+        self.ptcl.steps+=int(1)
+        self.reflect(r1)
+
+        return
+
+    #Reflects particle according specular reflection rule
+    def reflect(self,r1):
+
+        ptclR=np.sqrt(self.ptcl.r[0]**2+self.ptcl.r[1]**2)
+
+        #reflection off of circular boundary
+        if ptclR>self.R:
+            #use only x,y components for circular reflection
+            r2_=self.ptcl.r[:2]
+            r1_=r1[:2]
+
+            deltaR= r2_-r1_
+            lamda=-np.dot(r1_,deltaR)+np.sqrt(np.dot(r1_,deltaR)**2-np.dot(deltaR,deltaR)*(np.dot(r1_,r1_)-self.R**2))
+            lamda=lamda/np.dot(deltaR,deltaR)
+
+            #point of intersection on circle
+            r3_=r1_+lamda*(deltaR)
+
+            alpha=2.*np.dot(r3_,(r2_-r3_))/(self.R**2)
+
+            #reflect particle off of circular boundary
+            self.ptcl.r[0]=self.ptcl.r[0] - alpha*r3_[0]
+            self.ptcl.r[1]=self.ptcl.r[1] - alpha*r3_[1]
+
+        #reflect of end caps of cylinder if 3D walk
+        if len(self.L)==2:
+            if self.ptcl.r[2]> 0.5*self.L[1]:
+                self.ptcl.r[2]=self.L[1]-self.ptcl.r[2]
+            if self.ptcl.r[2]< -0.5*self.L[1]:
+                self.ptcl.r[2]=-self.L[1]-self.ptcl.r[2]
+
+        return
+
+
+
+
 #3D Random walk in a rectangular cell with feed through at the top along the z-axis
 #Box+feed through is assumed be symmetric about z-axis. Feed through is assumed to be infinitely high
 class CellWalk(Walk):
@@ -151,6 +242,8 @@ class CellWalk(Walk):
             if np.abs(self.ptcl.r[i])> self.L[i]/2. and (not self.inStem(self.ptcl.r)):
                 raise ValueError('particle not starting in cell!')
 
+    def __str__(self):
+        return "Rectangular Cell Walk"
 
     #steps the particle and updates particle preccesion according to Bfield
     def step(self,Bfield):
@@ -197,6 +290,7 @@ class CellWalk(Walk):
                 if self.ptcl.r[i]< -0.5*self.SL[i]:
                     self.ptcl.r[i]=-self.SL[i]-self.ptcl.r[i]
 
+        #if particle crosses upper z boundary
         if (r0[2]< 0.5*self.L[2] and self.ptcl.r[2]> 0.5*self.L[2]) or (r0[2]> 0.5*self.L[2] and self.ptcl.r[2]< 0.5*self.L[2]):
             #if the particle remains in the stem, do nothing
             if self.inStem(r0) and self.inStem(self.ptcl.r):
@@ -219,9 +313,6 @@ class CellWalk(Walk):
                 return
 
         return
-
-
-
 
 
 #Removes data points that are binomial but not sufficiently guassian for chisqure test
@@ -324,7 +415,8 @@ def LoadData(fname):
 def bThickness(D,G,gamma):
 
     if G==0: return np.inf
-    else: return np.power((4.*D)/(gamma*np.abs(G)),1./3.)
+    #recently removed the factor of 4!
+    else: return np.power((D)/(gamma*np.abs(G)),1./3.)
 
 
 #returns the resonance thickness (B1 in Gauss, G in Gauss/cm, theta in radians)
